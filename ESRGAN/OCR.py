@@ -20,5 +20,5 @@ def Excl():
         list_Master_OCR.append([IDD, conc])
 
     df = pd.DataFrame(list_Master_OCR, columns=['ID', 'Number_Plate'])
-    df.to_csv('D:/Virtual_Env/GitHub_projects/Number_Plate_detection_Yolov5-DeepSort/NB_plate_SR.csv',index=False)
+    df.to_csv('D:/Virtual_Env/GitHub_projects/ATCC_Yolov5/NB_plate_SR.csv',index=False)
     print('OCR Process Complete!!')

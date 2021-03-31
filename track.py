@@ -26,6 +26,27 @@ from ESRGAN.OCR import Excl
 
 palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 
+def crop_ocr(bbox_xyxy1,identities1,img,frame_idx1,ocr1):
+    bbox_xyxy = bbox_xyxy1
+    identities = identities1
+    for bbox,iden in zip(bbox_xyxy,identities):
+        x1 = bbox[0]
+        y1 = bbox[1]
+        x2 = bbox[2]
+        y2 = bbox[3]
+        IDD = iden
+        img1 = Image.fromarray(np.uint8(img * 255)).convert('RGB')  # Converting Image
+        crop_img = img1.crop((x1, y1, x2, y2))  # Cropping Image
+        # crop_img.save(fp='inference/output/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
+        # ocr_result = ocr.readtext('inference/output/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
+        crop_img.save(fp='ESRGAN/LR/img' + str(frame_idx1) + '_ID_' + str(IDD) + '.jpg')
+        ocr_result = ocr1.readtext('ESRGAN/LR/img' + str(frame_idx1) + '_ID_' + str(IDD) + '.jpg')
+        conc = ''
+        for iocr in ocr_result:
+            conc = conc + iocr[1]
+
+        list_Master_OCR.append([IDD, conc])
+    # return [IDD, conc]
 
 def bbox_rel(*xyxy):
     """" Calculates the relative bounding box from absolute pixel values. """
@@ -92,6 +113,7 @@ def detect(opt, save_img=False):
     # Initialize
     conc = ''
     list_ID_OCR = []
+    global list_Master_OCR
     list_Master_OCR = []
     ocr = easyocr.Reader(['en'])
     device = select_device(opt.device)
@@ -186,22 +208,23 @@ def detect(opt, save_img=False):
                 if ((len(outputs) > 0) & (confs[0][0]>0.55)):
                     bbox_xyxy = outputs[:, :4]
                     identities = outputs[:, -1]
-                    x1 = bbox_xyxy[0][0]
-                    y1 = bbox_xyxy[0][1]
-                    x2 = bbox_xyxy[0][2]
-                    y2 = bbox_xyxy[0][3]
-                    IDD = identities[0]
-                    img1 = Image.fromarray(np.uint8(im0 * 255)).convert('RGB')  # Converting Image
-                    crop_img = img1.crop((x1, y1, x2, y2))  # Cropping Image
-                    # crop_img.save(fp='inference/output/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
-                    # ocr_result = ocr.readtext('inference/output/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
-                    crop_img.save(fp='ESRGAN/LR/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
-                    ocr_result = ocr.readtext('ESRGAN/LR/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
-                    conc = ''
-                    for iocr in ocr_result:
-                        conc = conc + iocr[1]
-
-                    list_Master_OCR.append([IDD,conc])
+                    crop_ocr(bbox_xyxy, identities, im0, frame_idx, ocr)
+                    # x1 = bbox_xyxy[0][0]
+                    # y1 = bbox_xyxy[0][1]
+                    # x2 = bbox_xyxy[0][2]
+                    # y2 = bbox_xyxy[0][3]
+                    # IDD = identities[0]
+                    # img1 = Image.fromarray(np.uint8(im0 * 255)).convert('RGB')  # Converting Image
+                    # crop_img = img1.crop((x1, y1, x2, y2))  # Cropping Image
+                    # # crop_img.save(fp='inference/output/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
+                    # # ocr_result = ocr.readtext('inference/output/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
+                    # crop_img.save(fp='ESRGAN/LR/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
+                    # ocr_result = ocr.readtext('ESRGAN/LR/img' + str(frame_idx) + '_ID_' + str(IDD) + '.jpg')
+                    # conc = ''
+                    # for iocr in ocr_result:
+                    #     conc = conc + iocr[1]
+                    #
+                    # list_Master_OCR.append([IDD,conc])
                     pts = deepsort.get_pts()
                     draw_boxes(pts,im0, bbox_xyxy, identities)
 
@@ -229,7 +252,7 @@ def detect(opt, save_img=False):
                 cv2.imshow(p, im0)
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     df = pd.DataFrame(list_Master_OCR, columns=['ID', 'Number_Plate'])
-                    df.to_csv('D:/Virtual_Env/GitHub_projects/Number_Plate_detection_Yolov5-DeepSort/NB_plate.csv',index=False)
+                    df.to_csv('D:/Virtual_Env/GitHub_projects/ATCC_Yolov5/NB_plate.csv',index=False)
                     ESR()
                     Excl()
                     raise StopIteration
@@ -260,7 +283,7 @@ def detect(opt, save_img=False):
 
     print('Done. (%.3fs)' % (time.time() - t0))
     df = pd.DataFrame(list_Master_OCR,columns=['ID','Number_Plate'])
-    df.to_csv('D:/Virtual_Env/GitHub_projects/Number_Plate_detection_Yolov5-DeepSort/NB_plate.csv',index=False)
+    df.to_csv('D:/Virtual_Env/GitHub_projects/ATCC_Yolov5/NB_plate.csv',index=False)
     ESR()
     Excl()
 
